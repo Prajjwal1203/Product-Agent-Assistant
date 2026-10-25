@@ -8,23 +8,116 @@ from store_assistant.graph import ask, build_app, pending_draft, review
 from store_assistant.render import LABELS
 from store_assistant.retrieval import load_docs
 
-st.set_page_config(page_title="Store Product Assistant", layout="wide")
+st.set_page_config(page_title="Store Product Assistant", page_icon="🛍️", layout="wide")
 
 st.markdown(
     """
 <style>
-.card{border-radius:8px;padding:12px 16px;margin:6px 0 12px;border:1px solid;color:#1f2937}
-.card b{display:block;font-size:1.05rem}
-.rec{background:#e6f4d7;border-color:#7cb342}
-.warn{background:#fff6d6;border-color:#e0b43a}
-.na{background:#e9eaec;border-color:#b5b8be}
-.bad{background:#fde2e1;border-color:#e57373}
-.lbl{font-size:.85rem;font-weight:600;opacity:.75;margin-top:4px}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
-table.cmp{width:100%;border-collapse:collapse;margin-bottom:4px}
-table.cmp th,table.cmp td{border:1px solid #c9ccd1;padding:6px 10px;text-align:left}
-table.cmp th{background:#e9eaec;color:#1f2937}
-table.cmp td{background:#fff;color:#1f2937}
+    :root {
+        --bg: #f3f7fb;
+        --panel: rgba(255, 255, 255, 0.78);
+        --panel-alt: #ffffff;
+        --primary: #1e5eff;
+        --primary-soft: #edf3ff;
+        --success: #1b8f5a;
+        --warning: #c27912;
+        --danger: #c93b3b;
+        --neutral: #4a5568;
+        --line: #dfe7f1;
+        --shadow: 0 14px 30px rgba(17, 24, 39, 0.08);
+    }
+
+    .stApp {
+        background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 100%);
+    }
+
+    div[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #eff5ff 0%, #f9fbff 100%);
+    }
+
+    .hero {
+        padding: 1.25rem 1.5rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(30,94,255,0.08), rgba(79,195,247,0.05));
+        margin-bottom: 1.25rem;
+        box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+        display: inline-block;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .hero h1 {
+        margin: 0.6rem 0 0.25rem;
+        font-size: clamp(2rem, 3vw, 2.8rem);
+        line-height: 1.1;
+        color: #0f172a;
+    }
+
+    .hero p {
+        margin: 0;
+        color: var(--neutral);
+        font-size: 1rem;
+    }
+
+    .status-pills {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .status-pill {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.7);
+        padding: 0.45rem 0.75rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .panel {
+        background: rgba(255,255,255,0.7);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 1.1rem 1.15rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 1rem;
+    }
+
+    .section-title {
+        margin: 0 0 0.7rem;
+        font-size: 0.84rem;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #475569;
+    }
+
+    .card{border-radius:14px;padding:14px 16px;margin:6px 0 14px;border:1px solid;color:#1f2937;background:#fff;box-shadow:0 10px 20px rgba(15,23,42,0.04)}
+    .card b{display:block;font-size:1.05rem;color:#0f172a}
+    .rec{background:linear-gradient(135deg,#ebfbee,#f5fff8);border-color:#8ad3a2}
+    .warn{background:linear-gradient(135deg,#fff5dd,#fffaf0);border-color:#f0c768}
+    .na{background:linear-gradient(135deg,#eef2f7,#f8fafc);border-color:#cbd5e1}
+    .bad{background:linear-gradient(135deg,#fdecec,#fff4f4);border-color:#f0a2a2}
+    .lbl{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#475569;margin-top:4px}
+    .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:middle}
+    table.cmp{width:100%;border-collapse:collapse;margin-bottom:6px;border-radius:12px;overflow:hidden}
+    table.cmp th,table.cmp td{border:1px solid #dfe7f1;padding:8px 10px;text-align:left;vertical-align:top}
+    table.cmp th{background:#edf3ff;color:#0f172a;font-weight:700}
+    table.cmp td{background:#fff;color:#1f2937}
+    .stAlert, .stSuccess, .stWarning, .stInfo {border-radius: 12px;}
 </style>
 """,
     unsafe_allow_html=True,
@@ -104,16 +197,45 @@ def show_response(r: dict):
 
 
 app = get_app()
-st.subheader("Store Product Assistant")
-left, right = st.columns(2, gap="large")
+
+st.markdown(
+    """
+<div class="hero">
+    <div class="eyebrow">Store associate copilot</div>
+    <h1>Store Product Assistant</h1>
+    <p>Compare products with approved catalog and policy guidance, while keeping supervisor review as a safety net.</p>
+    <div class="status-pills">
+        <span class="status-pill">Approved-only answers</span>
+        <span class="status-pill">Cited comparisons</span>
+        <span class="status-pill">Safety guards enabled</span>
+    </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+st.sidebar.markdown(
+    """
+<div class="panel">
+    <div class="section-title">Quick guide</div>
+    <p>Ask about product fit, budget, must-haves, and use cases. The assistant only answers from approved documents.</p>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+st.sidebar.caption("Use approved catalog IDs and policy references for the most reliable answers.")
+
+left, right = st.columns([1.05, 1.35], gap="large")
 
 with left:
-    question = st.text_area("Customer question", placeholder="Which of these is better for long flights?")
-    ids = st.multiselect("Product IDs", approved_product_ids(), default=["HP-100", "HP-200"])
-    budget = st.number_input("Budget (max, Rs)", min_value=0, value=0, step=500)
-    must = st.text_input("Must have (comma separated)", placeholder="noise cancellation")
-    use_case = st.text_input("Use case", placeholder="travel")
-    asked = st.button("Ask assistant", type="primary")
+    st.markdown('<div class="section-title">Customer request</div>', unsafe_allow_html=True)
+    with st.form("product_question_form"):
+        question = st.text_area("Customer question", placeholder="Which of these is better for long flights?")
+        ids = st.multiselect("Product IDs", approved_product_ids(), default=["HP-100", "HP-200"])
+        budget = st.number_input("Budget (max, Rs)", min_value=0, value=0, step=500)
+        must = st.text_input("Must have (comma separated)", placeholder="noise cancellation")
+        use_case = st.text_input("Use case", placeholder="travel")
+        asked = st.form_submit_button("Ask assistant", type="primary", use_container_width=True)
 
 if asked and question:
     st.session_state["result"] = ask(
@@ -130,6 +252,7 @@ if asked and question:
     )
 
 with right:
+    st.markdown('<div class="section-title">Answer panel</div>', unsafe_allow_html=True)
     result = st.session_state.get("result")
     if asked and not question:
         st.warning("Enter a customer question.")
@@ -148,4 +271,4 @@ with right:
                 st.session_state["result"] = review(app, result["thread_id"], False, note)
                 st.rerun()
     else:
-        st.caption("The cited answer will appear here.")
+        st.info("The cited answer will appear here after you submit a question.")

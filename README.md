@@ -9,7 +9,7 @@ uv sync --extra ui
 ollama signin
 ollama pull gpt-oss:120b-cloud
 ollama pull nomic-embed-text
-$env:SESSION_DATE = "2026-10-12"        # optional: pin the date (needed for the promo-expiry checks)
+$env:SESSION_DATE = "2026-10-15"        # optional: pin the date (needed for the promo-expiry checks)
 uv run uvicorn store_assistant.api:api --reload      # POST http://127.0.0.1:8000/ask  (docs at /docs)
 uv run streamlit run src/store_assistant/ui.py        # optional UI
 uv run python -m store_assistant.cli "Which is better for long flights?" --ids HP-100 HP-200 --budget 10000 --must-have "noise cancellation" --use-case travel
